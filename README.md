@@ -13,7 +13,7 @@ __Domain:__ Polymer/chemical production (extruder/pelletizer lines). <br/>
 __Scenario:__ Each participant acts as a process engineer monitoring a line, logging incidents, and exploring quality trends through an app + copilot.
 <br/>
 
-##Target Audience & Prerequisites##
+##T arget Audience & Prerequisites
 
 __Audience:__ Data engineers, analytics engineers, and citizen developers. Some basic familiarity with Python or SQL is helpful but not required.<br/>
 __Skill prerequisites:__ Comfort with basic SQL and reading Python. No prior Databricks Apps or Lakebase experience required.
@@ -27,8 +27,8 @@ __Platform prerequisites (workspace):__
 - Model Serving endpoint available for the Deep Research copilot (you pre-provision).
 
 
-##High-Level Architecture##
-###End-to-end flow for the lab###
+## High-Level Architecture
+### End-to-end flow for the lab
 
 __Synthetic data (per user):__ Users generate time-series sensor data for a production line using Genie Code in notebooks. Data lands as a raw Delta table under their own schema in a shared catalog (e.g., `nova_workshop.<user_schema>`).
 
