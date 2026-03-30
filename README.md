@@ -13,7 +13,7 @@ __Domain:__ Polymer/chemical production (extruder/pelletizer lines). <br/>
 __Scenario:__ Each participant acts as a process engineer monitoring a line, logging incidents, and exploring quality trends through an app + copilot.
 <br/>
 
-##T arget Audience & Prerequisites
+## Target Audience & Prerequisites
 
 __Audience:__ Data engineers, analytics engineers, and citizen developers. Some basic familiarity with Python or SQL is helpful but not required.<br/>
 __Skill prerequisites:__ Comfort with basic SQL and reading Python. No prior Databricks Apps or Lakebase experience required.
