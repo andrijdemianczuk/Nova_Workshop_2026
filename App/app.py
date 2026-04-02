@@ -131,6 +131,22 @@ def delete_todo(todo_id):
         print(f"Delete todo error: {e}")
         return False
 
+
+def get_incidents():
+    """Get all records from the andrij_demo.incidents table."""
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql.SQL(
+                    "SELECT id, line_id, ts, severity, summary, details, status "
+                    "FROM {}.incidents ORDER BY ts DESC"
+                ).format(sql.Identifier("andrij_demo")))
+                return cur.fetchall()
+    except Exception as e:
+        print(f"Get incidents error: {e}")
+        return []
+
+
 # Initialize Dash app
 app = dash.Dash(__name__)
 
@@ -169,7 +185,18 @@ app.layout = html.Div([
     ]),
 
     # Store for tracking changes
-    dcc.Store(id='todos-store')
+    dcc.Store(id='todos-store'),
+
+    html.Hr(),
+
+    # Incidents section
+    html.Div([
+        html.H3("Incidents", style={'marginBottom': '15px'}),
+        html.Div(id='incidents-container')
+    ], style={'marginTop': '20px'}),
+
+    # Store for incidents data
+    dcc.Store(id='incidents-store')
 ], style={'maxWidth': '800px', 'margin': '0 auto', 'padding': '20px'})
 
 @app.callback(
@@ -284,6 +311,81 @@ def display_todos(todos_data):
         todo_items.append(todo_item)
 
     return todo_items
+
+
+@app.callback(
+    Output('incidents-store', 'data'),
+    Input('todos-store', 'data'),
+    prevent_initial_call=False
+)
+def load_incidents(_):
+    """Load incidents data on page load."""
+    return get_incidents()
+
+
+@app.callback(
+    Output('incidents-container', 'children'),
+    Input('incidents-store', 'data')
+)
+def display_incidents(incidents_data):
+    """Render the incidents table."""
+    if not incidents_data:
+        return html.Div(
+            "No incidents found.",
+            style={'textAlign': 'center', 'color': '#6c757d', 'fontStyle': 'italic'}
+        )
+
+    header = html.Thead(html.Tr([
+        html.Th("ID", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Line ID", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Timestamp", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Severity", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Summary", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Details", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("Status", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+    ]))
+
+    rows = []
+    for inc_id, line_id, ts, severity, summary, details, status in incidents_data:
+        severity_color = {
+            'critical': '#dc3545',
+            'high': '#fd7e14',
+            'medium': '#ffc107',
+            'low': '#28a745',
+        }.get(str(severity).lower(), '#6c757d')
+
+        rows.append(html.Tr([
+            html.Td(inc_id, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+            html.Td(line_id, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+            html.Td(str(ts), style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+            html.Td(
+                severity,
+                style={
+                    'padding': '8px',
+                    'borderBottom': '1px solid #eee',
+                    'color': severity_color,
+                    'fontWeight': 'bold',
+                }
+            ),
+            html.Td(summary, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+            html.Td(details, style={'padding': '8px', 'borderBottom': '1px solid #eee', 'maxWidth': '200px', 'overflow': 'hidden', 'textOverflow': 'ellipsis', 'whiteSpace': 'nowrap'}),
+            html.Td(status, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+        ]))
+
+    body = html.Tbody(rows)
+
+    return html.Table(
+        [header, body],
+        style={
+            'width': '100%',
+            'borderCollapse': 'collapse',
+            'backgroundColor': '#fff',
+            'borderRadius': '8px',
+            'overflow': 'hidden',
+            'boxShadow': '0 1px 3px rgba(0,0,0,0.1)',
+        }
+    )
+
 
 if __name__ == '__main__':
     app.run(debug=True)
