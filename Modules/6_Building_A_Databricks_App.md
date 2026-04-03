@@ -203,6 +203,53 @@ Once resources and scopes are configured:
 
 ---
 
+## ⚠️ Before You Deploy: Update Your Serving Endpoint
+
+Each participant in this workshop creates their own **Genie space**, **Supervisor Agent**, and **agent serving endpoint**. The app source code ships with a placeholder endpoint name that **must be replaced** with your own before deploying.
+
+Open `App/app.py` and locate **line 16**:
+
+```python
+AGENT_MODEL = "mas-8f48e375-endpoint"
+```
+
+Replace the value with your own serving endpoint name:
+
+```python
+AGENT_MODEL = "<your-serving-endpoint-name>"
+```
+
+**Where to find your endpoint name:**
+
+1. In the Databricks sidebar, navigate to **Serving** (under Machine Learning).
+2. Locate the endpoint created for your Supervisor Agent.
+3. Copy the **endpoint name** from the top of the endpoint details page (e.g., `mas-<hash>-endpoint`).
+
+This value is used in `app.py` to route chat requests to your agent:
+
+```python
+response = workspace_client.api_client.do(
+    "POST",
+    f"/serving-endpoints/{AGENT_MODEL}/invocations",
+    body=body
+)
+```
+
+> **Important:** If you skip this step, the app's chat assistant will either fail with a 404 (endpoint not found) or route requests to another participant's agent. Every user must point to their own endpoint.
+
+Similarly, verify that the app resources added in **Step 3** reference **your own** instances:
+
+| Resource | What to verify |
+| --- | --- |
+| **Lakebase database** | Points to your Lakebase Autoscaling project (with the synced table) |
+| **Genie space** | Points to the Genie space you created (backed by your Lakebase table) |
+| **MLflow experiment** | Points to an experiment in your workspace directory |
+| **Model serving endpoint** | Points to your Supervisor Agent's serving endpoint |
+
+Once all four resources and the `AGENT_MODEL` value are set to your own, proceed to **Step 5** to deploy.
+
+---
+
 ## References
 
 * [Create a custom Databricks app](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/create-custom-app/)
