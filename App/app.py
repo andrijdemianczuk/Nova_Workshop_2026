@@ -5,11 +5,59 @@ import os
 from databricks import sdk
 from psycopg import sql
 from psycopg_pool import ConnectionPool
+import mlflow
 
 # Database connection setup
 workspace_client = sdk.WorkspaceClient()
 endpoint = os.getenv("PGENDPOINT", "")
 connection_pool = None
+
+# Agent endpoint setup
+AGENT_MODEL = "mas-8f48e375-endpoint"
+
+# MLflow experiment setup
+mlflow.set_tracking_uri("databricks")
+experiment_id = os.getenv("MLFLOW_EXPERIMENT_ID")
+if experiment_id:
+    mlflow.set_experiment(experiment_id=experiment_id)
+
+
+@mlflow.trace(name="ask_agent")
+def ask_agent(messages):
+    """Send conversation history to the agent endpoint via raw API call."""
+    try:
+        body = {"input": messages}
+        mlflow.log_text(str(body), "request_body.txt")
+
+        response = workspace_client.api_client.do(
+            "POST",
+            f"/serving-endpoints/{AGENT_MODEL}/invocations",
+            body=body
+        )
+        mlflow.log_text(str(response), "response_body.txt")
+
+        # Try Responses API format first (output -> content -> text)
+        output = response.get("output", [])
+        if output:
+            texts = []
+            for item in output:
+                for content in item.get("content", []):
+                    text = content.get("text", "")
+                    if text:
+                        texts.append(text)
+            if texts:
+                return " ".join(texts)
+
+        # Fallback: Chat Completions format (choices -> message -> content)
+        choices = response.get("choices", [])
+        if choices:
+            return choices[0]["message"]["content"]
+
+        mlflow.log_text(f"Unparsed response keys: {list(response.keys())}", "parse_debug.txt")
+        return "No response received."
+    except Exception as e:
+        mlflow.log_text(str(e), "error.txt")
+        return f"Error communicating with agent: {e}"
 
 
 class OAuthConnection(psycopg.Connection):
@@ -147,6 +195,52 @@ def get_incidents():
         return []
 
 
+def render_chat_messages(chat_history):
+    """Render chat messages as styled Dash components."""
+    if not chat_history:
+        return html.Div(
+            "Ask the assistant a question to get started.",
+            style={'textAlign': 'center', 'color': '#6c757d', 'fontStyle': 'italic', 'padding': '40px 0'}
+        )
+
+    messages = []
+    for msg in chat_history:
+        if msg["role"] == "user":
+            messages.append(html.Div([
+                html.Div(
+                    msg["content"],
+                    style={
+                        'backgroundColor': '#007bff',
+                        'color': 'white',
+                        'padding': '10px 14px',
+                        'borderRadius': '16px 16px 2px 16px',
+                        'maxWidth': '70%',
+                        'marginLeft': 'auto',
+                        'marginBottom': '10px',
+                        'wordWrap': 'break-word',
+                        'fontSize': '14px',
+                    }
+                )
+            ], style={'display': 'flex', 'justifyContent': 'flex-end'}))
+        else:
+            messages.append(html.Div([
+                html.Div(
+                    msg["content"],
+                    style={
+                        'backgroundColor': '#e9ecef',
+                        'color': '#212529',
+                        'padding': '10px 14px',
+                        'borderRadius': '16px 16px 16px 2px',
+                        'maxWidth': '70%',
+                        'marginBottom': '10px',
+                        'wordWrap': 'break-word',
+                        'fontSize': '14px',
+                    }
+                )
+            ], style={'display': 'flex', 'justifyContent': 'flex-start'}))
+    return messages
+
+
 # Initialize Dash app
 app = dash.Dash(__name__)
 
@@ -157,6 +251,61 @@ if not init_database():
 # App layout
 app.layout = html.Div([
     html.H1("Todo List App", style={'textAlign': 'center', 'marginBottom': '30px'}),
+
+    # Chat assistant section
+    html.Div([
+        html.H3("Chat Assistant", style={'marginBottom': '15px'}),
+        html.Div(
+            id='chat-messages',
+            children=render_chat_messages([]),
+            style={
+                'height': '300px',
+                'overflowY': 'auto',
+                'border': '1px solid #dee2e6',
+                'borderRadius': '8px',
+                'padding': '15px',
+                'marginBottom': '10px',
+                'backgroundColor': '#fff',
+            }
+        ),
+        html.Div([
+            dcc.Input(
+                id='chat-input',
+                type='text',
+                placeholder='Ask a question...',
+                n_submit=0,
+                style={
+                    'flex': '1',
+                    'padding': '10px',
+                    'marginRight': '10px',
+                    'borderRadius': '5px',
+                    'border': '1px solid #ced4da',
+                }
+            ),
+            html.Button(
+                'Send',
+                id='chat-send-button',
+                n_clicks=0,
+                style={
+                    'padding': '10px 20px',
+                    'backgroundColor': '#28a745',
+                    'color': 'white',
+                    'border': 'none',
+                    'borderRadius': '5px',
+                    'cursor': 'pointer',
+                }
+            ),
+        ], style={'display': 'flex', 'alignItems': 'center'}),
+        dcc.Store(id='chat-history', data=[]),
+        dcc.Loading(
+            id='chat-loading',
+            type='dot',
+            children=html.Div(id='chat-loading-output'),
+            style={'marginTop': '5px'}
+        ),
+    ], style={'marginBottom': '30px', 'padding': '20px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px'}),
+
+    html.Hr(),
 
     # Add new todo section
     html.Div([
@@ -198,6 +347,36 @@ app.layout = html.Div([
     # Store for incidents data
     dcc.Store(id='incidents-store')
 ], style={'maxWidth': '800px', 'margin': '0 auto', 'padding': '20px'})
+
+
+# --- Chat callbacks ---
+
+@app.callback(
+    [Output('chat-messages', 'children'),
+     Output('chat-history', 'data'),
+     Output('chat-input', 'value'),
+     Output('chat-loading-output', 'children')],
+    [Input('chat-send-button', 'n_clicks'),
+     Input('chat-input', 'n_submit')],
+    [State('chat-input', 'value'),
+     State('chat-history', 'data')],
+    prevent_initial_call=True
+)
+def handle_chat(n_clicks, n_submit, user_input, chat_history):
+    """Send user message to the agent and display the response."""
+    if not user_input or not user_input.strip():
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+    chat_history = chat_history or []
+    chat_history.append({"role": "user", "content": user_input.strip()})
+
+    response_text = ask_agent(chat_history)
+    chat_history.append({"role": "assistant", "content": response_text})
+
+    return render_chat_messages(chat_history), chat_history, "", ""
+
+
+# --- Todo callbacks ---
 
 @app.callback(
     Output('todos-store', 'data'),
@@ -312,6 +491,8 @@ def display_todos(todos_data):
 
     return todo_items
 
+
+# --- Incidents callbacks ---
 
 @app.callback(
     Output('incidents-store', 'data'),

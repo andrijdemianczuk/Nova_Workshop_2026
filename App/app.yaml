@@ -2,3 +2,5 @@ command: ["python", "app.py"]
 env:
   - name: PGENDPOINT
     valueFrom: postgres
+  - name: MLFLOW_EXPERIMENT_ID
+    valueFrom: experiment
