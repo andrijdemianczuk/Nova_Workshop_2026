@@ -200,44 +200,17 @@ def render_chat_messages(chat_history):
     if not chat_history:
         return html.Div(
             "Ask the assistant a question to get started.",
-            style={'textAlign': 'center', 'color': '#6c757d', 'fontStyle': 'italic', 'padding': '40px 0'}
+            className='chat-placeholder'
         )
 
     messages = []
     for msg in chat_history:
-        if msg["role"] == "user":
-            messages.append(html.Div([
-                html.Div(
-                    msg["content"],
-                    style={
-                        'backgroundColor': '#007bff',
-                        'color': 'white',
-                        'padding': '10px 14px',
-                        'borderRadius': '16px 16px 2px 16px',
-                        'maxWidth': '70%',
-                        'marginLeft': 'auto',
-                        'marginBottom': '10px',
-                        'wordWrap': 'break-word',
-                        'fontSize': '14px',
-                    }
-                )
-            ], style={'display': 'flex', 'justifyContent': 'flex-end'}))
-        else:
-            messages.append(html.Div([
-                html.Div(
-                    msg["content"],
-                    style={
-                        'backgroundColor': '#e9ecef',
-                        'color': '#212529',
-                        'padding': '10px 14px',
-                        'borderRadius': '16px 16px 16px 2px',
-                        'maxWidth': '70%',
-                        'marginBottom': '10px',
-                        'wordWrap': 'break-word',
-                        'fontSize': '14px',
-                    }
-                )
-            ], style={'display': 'flex', 'justifyContent': 'flex-start'}))
+        is_user = msg["role"] == "user"
+        messages.append(html.Div(
+            html.Div(msg["content"],
+                      className=f'chat-bubble chat-bubble-{"user" if is_user else "assistant"}'),
+            className=f'chat-row chat-row-{"user" if is_user else "assistant"}'
+        ))
     return messages
 
 
@@ -250,23 +223,19 @@ if not init_database():
 
 # App layout
 app.layout = html.Div([
-    html.H1("Todo List App", style={'textAlign': 'center', 'marginBottom': '30px'}),
+    # Header
+    html.Div([
+        html.H1("Command Center"),
+        html.P("Todos, incidents & AI assistant in one place"),
+    ], className='app-header'),
 
     # Chat assistant section
     html.Div([
-        html.H3("Chat Assistant", style={'marginBottom': '15px'}),
+        html.H3("Chat Assistant"),
         html.Div(
             id='chat-messages',
             children=render_chat_messages([]),
-            style={
-                'height': '300px',
-                'overflowY': 'auto',
-                'border': '1px solid #dee2e6',
-                'borderRadius': '8px',
-                'padding': '15px',
-                'marginBottom': '10px',
-                'backgroundColor': '#fff',
-            }
+            className='chat-window',
         ),
         html.Div([
             dcc.Input(
@@ -274,79 +243,52 @@ app.layout = html.Div([
                 type='text',
                 placeholder='Ask a question...',
                 n_submit=0,
-                style={
-                    'flex': '1',
-                    'padding': '10px',
-                    'marginRight': '10px',
-                    'borderRadius': '5px',
-                    'border': '1px solid #ced4da',
-                }
+                style={'flex': '1'},
             ),
-            html.Button(
-                'Send',
-                id='chat-send-button',
-                n_clicks=0,
-                style={
-                    'padding': '10px 20px',
-                    'backgroundColor': '#28a745',
-                    'color': 'white',
-                    'border': 'none',
-                    'borderRadius': '5px',
-                    'cursor': 'pointer',
-                }
-            ),
-        ], style={'display': 'flex', 'alignItems': 'center'}),
+            html.Button('Send', id='chat-send-button', n_clicks=0,
+                         className='btn btn-send'),
+        ], className='chat-input-row'),
         dcc.Store(id='chat-history', data=[]),
         dcc.Loading(
-            id='chat-loading',
-            type='dot',
+            id='chat-loading', type='dot',
             children=html.Div(id='chat-loading-output'),
-            style={'marginTop': '5px'}
+            style={'marginTop': '5px'},
         ),
-    ], style={'marginBottom': '30px', 'padding': '20px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px'}),
-
-    html.Hr(),
+    ], className='card'),
 
     # Add new todo section
     html.Div([
         html.H3("Add New Todo"),
-        dcc.Input(
-            id='new-todo-input',
-            type='text',
-            placeholder='What do you need to do?',
-            style={'width': '70%', 'padding': '10px', 'marginRight': '10px'}
-        ),
-        html.Button(
-            'Add Todo',
-            id='add-todo-button',
-            n_clicks=0,
-            style={'padding': '10px 20px', 'backgroundColor': '#007bff', 'color': 'white', 'border': 'none', 'borderRadius': '5px'}
-        ),
-        html.Div(id='add-todo-message', style={'marginTop': '10px'})
-    ], style={'marginBottom': '30px', 'padding': '20px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px'}),
-
-    html.Hr(),
+        html.Div([
+            dcc.Input(
+                id='new-todo-input',
+                type='text',
+                placeholder='What do you need to do?',
+            ),
+            html.Button('Add Todo', id='add-todo-button', n_clicks=0,
+                         className='btn btn-primary'),
+        ], className='add-todo-row'),
+        html.Div(id='add-todo-message', style={'marginTop': '10px'}),
+    ], className='card'),
 
     # Todo list section
     html.Div([
         html.H3("Your Todos"),
-        html.Div(id='todos-container')
-    ]),
+        html.Div(id='todos-container'),
+    ], className='card'),
 
     # Store for tracking changes
     dcc.Store(id='todos-store'),
 
-    html.Hr(),
-
     # Incidents section
     html.Div([
-        html.H3("Incidents", style={'marginBottom': '15px'}),
-        html.Div(id='incidents-container')
-    ], style={'marginTop': '20px'}),
+        html.H3("Incidents"),
+        html.Div(id='incidents-container'),
+    ], className='card'),
 
     # Store for incidents data
-    dcc.Store(id='incidents-store')
-], style={'maxWidth': '800px', 'margin': '0 auto', 'padding': '20px'})
+    dcc.Store(id='incidents-store'),
+], className='app-wrapper')
 
 
 # --- Chat callbacks ---
@@ -451,43 +393,22 @@ def display_todos(todos_data):
     """Display todos in the UI."""
     if not todos_data:
         return html.Div("No todos yet! Add one above to get started.",
-                       style={'textAlign': 'center', 'color': '#6c757d', 'fontStyle': 'italic'})
+                         className='todo-empty')
 
     todo_items = []
     for todo_id, task, completed, created_at in todos_data:
-        todo_item = html.Div([
-            html.Div([
-                # Checkbox
-                dcc.Checklist(
-                    id={'type': 'todo-checkbox', 'index': todo_id},
-                    options=[{'label': '', 'value': 'completed'}],
-                    value=['completed'] if completed else [],
-                    style={'display': 'inline-block', 'marginRight': '10px'}
-                ),
-                # Task text
-                html.Span(
-                    task,
-                    style={
-                        'textDecoration': 'line-through' if completed else 'none',
-                        'color': '#6c757d' if completed else 'black',
-                        'flex': '1'
-                    }
-                ),
-                # Delete button
-                html.Button(
-                    "Delete",
-                    id={'type': 'delete-button', 'index': todo_id},
-                    style={
-                        'backgroundColor': 'transparent',
-                        'border': 'none',
-                        'fontSize': '16px',
-                        'cursor': 'pointer',
-                        'marginLeft': '10px'
-                    }
-                )
-            ], style={'display': 'flex', 'alignItems': 'center', 'padding': '10px', 'borderBottom': '1px solid #eee'})
-        ])
-        todo_items.append(todo_item)
+        todo_items.append(html.Div([
+            dcc.Checklist(
+                id={'type': 'todo-checkbox', 'index': todo_id},
+                options=[{'label': '', 'value': 'completed'}],
+                value=['completed'] if completed else [],
+                className='todo-checkbox',
+                style={'display': 'inline-block', 'marginRight': '12px'},
+            ),
+            html.Span(task, className='todo-text-done' if completed else 'todo-text'),
+            html.Button("Delete", id={'type': 'delete-button', 'index': todo_id},
+                         className='btn btn-delete'),
+        ], className='todo-item'))
 
     return todo_items
 
@@ -511,61 +432,35 @@ def load_incidents(_):
 def display_incidents(incidents_data):
     """Render the incidents table."""
     if not incidents_data:
-        return html.Div(
-            "No incidents found.",
-            style={'textAlign': 'center', 'color': '#6c757d', 'fontStyle': 'italic'}
-        )
+        return html.Div("No incidents found.", className='todo-empty')
 
     header = html.Thead(html.Tr([
-        html.Th("ID", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Line ID", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Timestamp", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Severity", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Summary", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Details", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
-        html.Th("Status", style={'padding': '10px', 'borderBottom': '2px solid #dee2e6'}),
+        html.Th("ID"), html.Th("Line ID"), html.Th("Timestamp"),
+        html.Th("Severity"), html.Th("Summary"), html.Th("Details"), html.Th("Status"),
     ]))
+
+    severity_class_map = {
+        'critical': 'severity-critical',
+        'high': 'severity-high',
+        'medium': 'severity-medium',
+        'low': 'severity-low',
+    }
 
     rows = []
     for inc_id, line_id, ts, severity, summary, details, status in incidents_data:
-        severity_color = {
-            'critical': '#dc3545',
-            'high': '#fd7e14',
-            'medium': '#ffc107',
-            'low': '#28a745',
-        }.get(str(severity).lower(), '#6c757d')
-
+        sev_cls = severity_class_map.get(str(severity).lower(), 'severity-default')
         rows.append(html.Tr([
-            html.Td(inc_id, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
-            html.Td(line_id, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
-            html.Td(str(ts), style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
-            html.Td(
-                severity,
-                style={
-                    'padding': '8px',
-                    'borderBottom': '1px solid #eee',
-                    'color': severity_color,
-                    'fontWeight': 'bold',
-                }
-            ),
-            html.Td(summary, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
-            html.Td(details, style={'padding': '8px', 'borderBottom': '1px solid #eee', 'maxWidth': '200px', 'overflow': 'hidden', 'textOverflow': 'ellipsis', 'whiteSpace': 'nowrap'}),
-            html.Td(status, style={'padding': '8px', 'borderBottom': '1px solid #eee'}),
+            html.Td(inc_id),
+            html.Td(line_id),
+            html.Td(str(ts)),
+            html.Td(html.Span(severity, className=f'severity-badge {sev_cls}')),
+            html.Td(summary),
+            html.Td(details, style={'maxWidth': '200px', 'overflow': 'hidden',
+                                     'textOverflow': 'ellipsis', 'whiteSpace': 'nowrap'}),
+            html.Td(status),
         ]))
 
-    body = html.Tbody(rows)
-
-    return html.Table(
-        [header, body],
-        style={
-            'width': '100%',
-            'borderCollapse': 'collapse',
-            'backgroundColor': '#fff',
-            'borderRadius': '8px',
-            'overflow': 'hidden',
-            'boxShadow': '0 1px 3px rgba(0,0,0,0.1)',
-        }
-    )
+    return html.Table([header, html.Tbody(rows)], className='incidents-table')
 
 
 if __name__ == '__main__':

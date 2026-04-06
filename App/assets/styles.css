@@ -1,0 +1,342 @@
+/* ── Reset & Base ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+.app-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.app-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.app-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+}
+
+.app-header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-top: 6px;
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s;
+}
+
+.card:hover {
+    border-color: #475569;
+}
+
+.card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Inputs ───────────────────────────────────────────── */
+input[type="text"] {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    color: #e2e8f0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.9rem !important;
+    padding: 12px 16px !important;
+    outline: none !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+input[type="text"]:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
+}
+
+input[type="text"]::placeholder {
+    color: #64748b !important;
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+.btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 12px 24px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-send {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+}
+
+.btn-send:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: transparent;
+    color: #ef4444;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Chat ─────────────────────────────────────────────── */
+.chat-window {
+    height: 340px;
+    overflow-y: auto;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+    scrollbar-width: thin;
+    scrollbar-color: #334155 transparent;
+}
+
+.chat-window::-webkit-scrollbar { width: 6px; }
+.chat-window::-webkit-scrollbar-track { background: transparent; }
+.chat-window::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+.chat-placeholder {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 80px 0;
+    font-size: 0.9rem;
+}
+
+.chat-row { display: flex; margin-bottom: 12px; }
+.chat-row-user { justify-content: flex-end; }
+.chat-row-assistant { justify-content: flex-start; }
+
+.chat-bubble {
+    padding: 12px 16px;
+    max-width: 72%;
+    word-wrap: break-word;
+    font-size: 0.875rem;
+    line-height: 1.55;
+}
+
+.chat-bubble-user {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    border-radius: 16px 16px 4px 16px;
+}
+
+.chat-bubble-assistant {
+    background: #334155;
+    color: #e2e8f0;
+    border-radius: 16px 16px 16px 4px;
+}
+
+.chat-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ── Todo Items ───────────────────────────────────────── */
+.todo-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #1e293b;
+    transition: background 0.15s;
+    border-radius: 8px;
+}
+
+.todo-item:hover {
+    background: rgba(96, 165, 250, 0.04);
+}
+
+.todo-item:last-child {
+    border-bottom: none;
+}
+
+.todo-text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+}
+
+.todo-text-done {
+    flex: 1;
+    font-size: 0.9rem;
+    text-decoration: line-through;
+    color: #64748b;
+}
+
+.todo-empty {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 30px 0;
+    font-size: 0.9rem;
+}
+
+/* Checkbox styling */
+.todo-checkbox .form-check {
+    margin-right: 12px;
+}
+
+.todo-checkbox input[type="checkbox"] {
+    accent-color: #6366f1;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* ── Incidents Table ──────────────────────────────────── */
+.incidents-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.incidents-table thead th {
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 16px;
+    border-bottom: 1px solid #334155;
+    text-align: left;
+}
+
+.incidents-table tbody tr {
+    transition: background 0.15s;
+}
+
+.incidents-table tbody tr:hover {
+    background: rgba(96, 165, 250, 0.04);
+}
+
+.incidents-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.incidents-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Severity Badges ──────────────────────────────────── */
+.severity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.severity-critical {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+.severity-high {
+    background: rgba(251, 146, 60, 0.15);
+    color: #fb923c;
+}
+
+.severity-medium {
+    background: rgba(250, 204, 21, 0.15);
+    color: #facc15;
+}
+
+.severity-low {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+
+.severity-default {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+}
+
+/* ── Section Divider ──────────────────────────────────── */
+.section-divider {
+    border: none;
+    border-top: 1px solid #1e293b;
+    margin: 8px 0;
+}
+
+/* ── Loading ──────────────────────────────────────────── */
+._dash-loading-callback {
+    visibility: visible !important;
+}
+
+.dash-spinner .dot {
+    background-color: #6366f1 !important;
+}
+
+/* ── Add-todo row ─────────────────────────────────────── */
+.add-todo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.add-todo-row input { flex: 1; }
